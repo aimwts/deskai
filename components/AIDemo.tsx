@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { analyzeCustomerMessage } from '../services/geminiService';
+import { analyzeCustomerMessage, rewriteResponse } from '../services/geminiService';
 import { AIAnalysisResult } from '../types';
-import { Send, Loader2, MessageSquare, BrainCircuit, Sparkles, Terminal } from 'lucide-react';
+import { Send, Loader2, MessageSquare, BrainCircuit, Sparkles, Terminal, RefreshCw } from 'lucide-react';
 
 const AIDemo: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rewriting, setRewriting] = useState(false);
   const [result, setResult] = useState<AIAnalysisResult | null>(null);
 
   const handleAnalyze = async () => {
     if (!input.trim()) return;
     setLoading(true);
+    setResult(null);
     try {
       const data = await analyzeCustomerMessage(input);
       setResult(data);
@@ -19,6 +21,19 @@ const AIDemo: React.FC = () => {
       alert('Failed to analyze. Please try again or check your API key.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRewrite = async (tone: string) => {
+    if (!result) return;
+    setRewriting(true);
+    try {
+      const newResponse = await rewriteResponse(result.suggestedResponse, tone);
+      setResult({ ...result, suggestedResponse: newResponse });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setRewriting(false);
     }
   };
 
@@ -171,9 +186,32 @@ const AIDemo: React.FC = () => {
                         Copy
                       </button>
                     </div>
-                    <p className="text-slate-200 leading-relaxed text-sm">
-                      "{result.suggestedResponse}"
-                    </p>
+                    <div className="relative min-h-[60px]">
+                      {rewriting ? (
+                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm z-10">
+                          <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+                        </div>
+                      ) : null}
+                      <p className="text-slate-200 leading-relaxed text-sm">
+                        "{result.suggestedResponse}"
+                      </p>
+                    </div>
+                    
+                    {/* Rewrite Controls */}
+                    <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-700/50">
+                      <span className="text-xs text-slate-500 self-center mr-auto font-medium">Refine with Gemini:</span>
+                      {['Concise', 'Professional', 'Empathetic'].map((tone) => (
+                        <button
+                          key={tone}
+                          onClick={() => handleRewrite(tone)}
+                          disabled={rewriting}
+                          className="px-2 py-1 text-[10px] uppercase tracking-wide font-medium rounded border border-slate-600 hover:bg-slate-700 hover:border-slate-500 text-slate-300 transition-all flex items-center gap-1 disabled:opacity-50"
+                        >
+                          {rewriting ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                          {tone}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}

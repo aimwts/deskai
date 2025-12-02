@@ -6,6 +6,9 @@ import Customers from './components/Customers';
 import Pricing from './components/Pricing';
 import AIDemo from './components/AIDemo';
 import VideoGenerator from './components/VideoGenerator';
+import ImageAnalyzer from './components/ImageAnalyzer';
+import TTSDemo from './components/TTSDemo';
+import SearchGroundingDemo from './components/SearchGroundingDemo';
 import Footer from './components/Footer';
 
 function App() {
@@ -17,7 +20,10 @@ function App() {
         <Customers />
         <Features />
         <AIDemo />
+        <ImageAnalyzer />
+        <TTSDemo />
         <VideoGenerator />
+        <SearchGroundingDemo />
         <Pricing />
         
         {/* Simple CTA Section before Footer */}

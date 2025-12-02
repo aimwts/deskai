@@ -1,18 +1,11 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { AIAnalysisResult } from "../types";
 
-const apiKey = process.env.API_KEY || '';
-
-// Initialize the client
-// Note: In a real production app, you might proxy this through a backend to hide the key,
-// but for this frontend demo as per instructions, we use process.env.API_KEY directly.
-const ai = new GoogleGenAI({ apiKey });
-
 export const analyzeCustomerMessage = async (message: string): Promise<AIAnalysisResult> => {
+  // Always instantiate with the latest env var to catch key changes (e.g. after user selects a key)
+  const apiKey = process.env.API_KEY;
+  
   if (!apiKey) {
-    // Fallback mock if no API key is present for demo purposes, 
-    // although the instructions say to assume it's valid.
-    // This is just a safety net for the UI to not crash if the env var is missing in some previews.
     console.warn("No API_KEY found. Returning mock data.");
     return {
       sentiment: 'Negative',
@@ -21,6 +14,8 @@ export const analyzeCustomerMessage = async (message: string): Promise<AIAnalysi
       keyTopics: ['Connection', 'Outage', 'Frustration']
     };
   }
+
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
     const response = await ai.models.generateContent({
@@ -63,6 +58,24 @@ export const analyzeCustomerMessage = async (message: string): Promise<AIAnalysi
   }
 };
 
+export const rewriteResponse = async (originalText: string, tone: string): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `Rewrite the following customer service response to be more ${tone}. Keep the core meaning but change the style.
+      
+      Original: "${originalText}"`,
+    });
+
+    return response.text || originalText;
+  } catch (error) {
+    console.error("Gemini Rewrite Error:", error);
+    return originalText;
+  }
+};
+
 export const generateMarketingVideo = async (prompt: string, aspectRatio: '16:9' | '9:16'): Promise<string> => {
   // Create a new instance to ensure we use the latest key if it was just selected by the user
   const currentAi = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -100,6 +113,85 @@ export const generateMarketingVideo = async (prompt: string, aspectRatio: '16:9'
 
   } catch (error) {
     console.error("Veo API Error:", error);
+    throw error;
+  }
+};
+
+export const analyzeImage = async (base64Data: string, mimeType: string, prompt: string): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-pro-preview",
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: mimeType,
+              data: base64Data
+            }
+          },
+          {
+            text: prompt || "Analyze this image in detail. Describe what is happening, identify key objects or text, and provide insights relevant to customer support or visual inspection."
+          }
+        ]
+      }
+    });
+
+    return response.text || "No analysis generated.";
+  } catch (error) {
+    console.error("Image Analysis Error:", error);
+    throw new Error("Failed to analyze image.");
+  }
+};
+
+export const analyzeWithSearch = async (query: string): Promise<{ text: string; chunks: any[] }> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: query,
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
+
+    return {
+      text: response.text || "No response generated.",
+      chunks: response.candidates?.[0]?.groundingMetadata?.groundingChunks || [],
+    };
+  } catch (error) {
+    console.error("Search Grounding Error:", error);
+    throw new Error("Failed to perform search grounded analysis.");
+  }
+};
+
+export const generateSpeech = async (text: string, voiceName: string): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: { parts: [{ text: text }] },
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: voiceName },
+          },
+        },
+      },
+    });
+
+    const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!audioData) {
+        throw new Error("No audio data generated");
+    }
+    return audioData;
+
+  } catch (error) {
+    console.error("TTS Error:", error);
     throw error;
   }
 };

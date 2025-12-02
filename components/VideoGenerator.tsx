@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { generateMarketingVideo } from '../services/geminiService';
-import { Video, Sparkles, Loader2, Play, AlertCircle, ExternalLink } from 'lucide-react';
+import { Video, Sparkles, Loader2, Play, AlertCircle, ExternalLink, Download } from 'lucide-react';
 
 const VideoGenerator: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -224,15 +224,25 @@ const VideoGenerator: React.FC = () => {
                 )}
 
                 {videoUrl && !loading && (
-                  <video 
-                    controls 
-                    autoPlay 
-                    loop 
-                    className={`max-h-[500px] rounded-lg shadow-2xl ${
-                      aspectRatio === '9:16' ? 'w-auto h-full' : 'w-full h-auto'
-                    }`}
-                    src={videoUrl}
-                  />
+                  <div className="relative group w-full h-full flex items-center justify-center">
+                    <video 
+                      controls 
+                      autoPlay 
+                      loop 
+                      className={`max-h-[500px] rounded-lg shadow-2xl ${
+                        aspectRatio === '9:16' ? 'w-auto h-full' : 'w-full h-auto'
+                      }`}
+                      src={videoUrl}
+                    />
+                    <a 
+                      href={videoUrl} 
+                      download="gemini-veo-video.mp4"
+                      className="absolute bottom-6 right-6 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white p-2.5 rounded-lg transition-all opacity-0 group-hover:opacity-100 border border-white/20 hover:scale-105"
+                      title="Download Video"
+                    >
+                      <Download className="w-5 h-5" />
+                    </a>
+                  </div>
                 )}
               </div>
             </div>
