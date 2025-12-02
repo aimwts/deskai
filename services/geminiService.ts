@@ -2,10 +2,7 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { AIAnalysisResult } from "../types";
 
 export const analyzeCustomerMessage = async (message: string): Promise<AIAnalysisResult> => {
-  // Always instantiate with the latest env var to catch key changes (e.g. after user selects a key)
-  const apiKey = process.env.API_KEY;
-  
-  if (!apiKey) {
+  if (!process.env.API_KEY) {
     console.warn("No API_KEY found. Returning mock data.");
     return {
       sentiment: 'Negative',
@@ -15,7 +12,7 @@ export const analyzeCustomerMessage = async (message: string): Promise<AIAnalysi
     };
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
     const response = await ai.models.generateContent({
@@ -59,6 +56,8 @@ export const analyzeCustomerMessage = async (message: string): Promise<AIAnalysi
 };
 
 export const rewriteResponse = async (originalText: string, tone: string): Promise<string> => {
+  if (!process.env.API_KEY) return originalText;
+
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   try {
@@ -77,6 +76,8 @@ export const rewriteResponse = async (originalText: string, tone: string): Promi
 };
 
 export const generateMarketingVideo = async (prompt: string, aspectRatio: '16:9' | '9:16'): Promise<string> => {
+  if (!process.env.API_KEY) throw new Error("API Key required");
+
   // Create a new instance to ensure we use the latest key if it was just selected by the user
   const currentAi = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
@@ -118,6 +119,8 @@ export const generateMarketingVideo = async (prompt: string, aspectRatio: '16:9'
 };
 
 export const analyzeImage = async (base64Data: string, mimeType: string, prompt: string): Promise<string> => {
+  if (!process.env.API_KEY) throw new Error("API Key required");
+
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
@@ -146,6 +149,8 @@ export const analyzeImage = async (base64Data: string, mimeType: string, prompt:
 };
 
 export const analyzeWithSearch = async (query: string): Promise<{ text: string; chunks: any[] }> => {
+  if (!process.env.API_KEY) throw new Error("API Key required");
+
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
@@ -168,6 +173,8 @@ export const analyzeWithSearch = async (query: string): Promise<{ text: string; 
 };
 
 export const generateSpeech = async (text: string, voiceName: string): Promise<string> => {
+  if (!process.env.API_KEY) throw new Error("API Key required");
+
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
