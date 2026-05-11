@@ -10,15 +10,20 @@ const VideoGenerator: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState('');
   const [hasKey, setHasKey] = useState(false);
 
-  // Check for API key on mount
+  // Check backend key availability on mount
   useEffect(() => {
     const checkKey = async () => {
       if ((window as any).aistudio && (window as any).aistudio.hasSelectedApiKey) {
         const has = await (window as any).aistudio.hasSelectedApiKey();
         setHasKey(has);
-      } else {
-        // Fallback if not running in the specific environment, assume env var is set
-        setHasKey(!!(import.meta.env.VITE_API_KEY || (window as any).__APP_CONFIG__?.VITE_API_KEY));
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/key-check');
+        setHasKey(response.ok);
+      } catch {
+        setHasKey(false);
       }
     };
     checkKey();
@@ -101,7 +106,7 @@ const VideoGenerator: React.FC = () => {
                 <AlertCircle className="w-8 h-8 text-amber-400 mx-auto mb-3" />
                 <h4 className="text-white font-semibold mb-2">Paid API Key Required</h4>
                 <p className="text-slate-400 text-sm mb-4">
-                  Veo video generation requires a paid Google Cloud project. Please select your API key to continue.
+                  Veo video generation requires a backend API key. Set `GEMINI_API_KEY` in `.env.local` and run `npm run backend`.
                 </p>
                 <div className="flex flex-col gap-3">
                   <button
