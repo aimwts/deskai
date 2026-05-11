@@ -18,7 +18,7 @@ const VideoGenerator: React.FC = () => {
         setHasKey(has);
       } else {
         // Fallback if not running in the specific environment, assume env var is set
-        setHasKey(!!process.env.API_KEY);
+        setHasKey(!!(import.meta.env.VITE_API_KEY || (window as any).__APP_CONFIG__?.VITE_API_KEY));
       }
     };
     checkKey();

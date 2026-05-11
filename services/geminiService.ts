@@ -1,9 +1,14 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { AIAnalysisResult } from "../types";
 
+const getApiKey = (): string => {
+  return (import.meta.env.VITE_API_KEY as string) || (window as any).__APP_CONFIG__?.VITE_API_KEY || "";
+};
+
 export const analyzeCustomerMessage = async (message: string): Promise<AIAnalysisResult> => {
-  if (!process.env.API_KEY) {
-    console.warn("No API_KEY found. Returning mock data.");
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.warn("No API key found. Returning mock data.");
     return {
       sentiment: 'Negative',
       intent: 'Technical Support',
@@ -12,7 +17,7 @@ export const analyzeCustomerMessage = async (message: string): Promise<AIAnalysi
     };
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
     const response = await ai.models.generateContent({
@@ -56,9 +61,10 @@ export const analyzeCustomerMessage = async (message: string): Promise<AIAnalysi
 };
 
 export const rewriteResponse = async (originalText: string, tone: string): Promise<string> => {
-  if (!process.env.API_KEY) return originalText;
+  const apiKey = getApiKey();
+  if (!apiKey) return originalText;
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey });
   
   try {
     const response = await ai.models.generateContent({
@@ -76,10 +82,11 @@ export const rewriteResponse = async (originalText: string, tone: string): Promi
 };
 
 export const generateMarketingVideo = async (prompt: string, aspectRatio: '16:9' | '9:16'): Promise<string> => {
-  if (!process.env.API_KEY) throw new Error("API Key required");
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error("API Key required");
 
   // Create a new instance to ensure we use the latest key if it was just selected by the user
-  const currentAi = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const currentAi = new GoogleGenAI({ apiKey });
   
   try {
     let operation = await currentAi.models.generateVideos({
@@ -104,7 +111,7 @@ export const generateMarketingVideo = async (prompt: string, aspectRatio: '16:9'
     }
 
     // Fetch the actual video content using the API key
-    const response = await fetch(`${videoUri}&key=${process.env.API_KEY}`);
+    const response = await fetch(`${videoUri}&key=${apiKey}`);
     if (!response.ok) {
       throw new Error(`Failed to download video: ${response.statusText}`);
     }
@@ -119,9 +126,10 @@ export const generateMarketingVideo = async (prompt: string, aspectRatio: '16:9'
 };
 
 export const analyzeImage = async (base64Data: string, mimeType: string, prompt: string): Promise<string> => {
-  if (!process.env.API_KEY) throw new Error("API Key required");
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error("API Key required");
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
     const response = await ai.models.generateContent({
@@ -149,9 +157,10 @@ export const analyzeImage = async (base64Data: string, mimeType: string, prompt:
 };
 
 export const analyzeWithSearch = async (query: string): Promise<{ text: string; chunks: any[] }> => {
-  if (!process.env.API_KEY) throw new Error("API Key required");
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error("API Key required");
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
     const response = await ai.models.generateContent({
@@ -173,9 +182,10 @@ export const analyzeWithSearch = async (query: string): Promise<{ text: string; 
 };
 
 export const generateSpeech = async (text: string, voiceName: string): Promise<string> => {
-  if (!process.env.API_KEY) throw new Error("API Key required");
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error("API Key required");
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
     const response = await ai.models.generateContent({
