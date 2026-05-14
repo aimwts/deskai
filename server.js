@@ -2,12 +2,18 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type, Modality } from '@google/genai';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config({ path: '.env.local' });
 
 const app = express();
 const port = process.env.PORT || 3000;
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -209,6 +215,18 @@ app.post('/api/generate-video', async (req, res) => {
     console.error('Video Generation Error:', error);
     return res.status(500).json({ error: 'Failed to generate video' });
   }
+});
+
+const distPath = join(__dirname, 'dist');
+if (existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    res.sendFile(join(distPath, 'index.html'));
+  });
+}
+
+app.listen(port, () => {
+  console.log(`DeskAI backend proxy listening on http://localhost:${port}`);
 });
 
 app.listen(port, () => {
