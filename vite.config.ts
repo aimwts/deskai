@@ -7,10 +7,12 @@ export default defineConfig({
     target: 'esnext'
   },
   server: {
+    host: '0.0.0.0',
+    port: 5000,
+    allowedHosts: true,
     proxy: {
       '/api': 'http://localhost:3000',
     },
   },
-  // Ensure env vars are exposed correctly
   envPrefix: 'VITE_'
 });
